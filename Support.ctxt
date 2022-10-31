@@ -1,0 +1,9 @@
+#BlueJ class context
+comment0.target=Support
+comment1.params=
+comment1.target=Man\ getMan()
+comment2.params=step
+comment2.target=void\ changeLocation(int)
+comment3.params=width
+comment3.target=boolean\ isAtEdge(int)
+numComments=4

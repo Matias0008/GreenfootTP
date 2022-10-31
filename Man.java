@@ -1,288 +1,248 @@
-import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+import greenfoot.*;
 
-/**
- * Write a description of class Man here.
- * 
- * @author (your name) 
- * @version (a version number or a date)
- */
-public class Man extends Actor
-{
-    /**
-     * Act - do whatever the Man wants to do. This method is called whenever
-     * the 'Act' or 'Run' button gets pressed in the environment.
-     */
-    
-    // private GreenfootImage walking1;
-    // private GreenfootImage walking2;
-    // private GreenfootImage kicking1;
-    // private GreenfootImage kicking2;
-    private int walkTimer;
-    private int speed;
-    private int i;
-    private int y;
-    private int j;
-    private int t;
-    private boolean isRight;
-    private boolean isLeft;
-    
-    
-    public Man()
-    {
-        // walking1 = new GreenfootImage("standRight1.png");
-        // walking2 = new GreenfootImage("standRight2.png");
-        // kicking1 = new GreenfootImage("kickRight1.png");
-        // kicking2 = new GreenfootImage("kickRight2.png");
+public class Man extends Actor {
+    GreenfootImage punchingRight;
+    GreenfootImage punchingLeft;
+    int walkTimer;
+    int speed;
+    int power;
+    int life;
+    int rotate;
+    int punchTimer;
+    int defenceTimer;
+    int killCount;
+    boolean spaceDown;
+    boolean sDown;
+    boolean aDown;
+    boolean keyForDefence;
+    boolean isRight;
+    boolean isLeft;
+    boolean isPunching;
+    boolean isDefending;
+    boolean avaiableSpecialMove;
+ 
+    public Man() {
+        punchingRight = new GreenfootImage("punchRight.png");
+        punchingLeft = new GreenfootImage("punchLeft.png");
         walkTimer = 0;
+        punchTimer = 0;
+        defenceTimer = 100;
         speed = 0;
-        i = 0;
-        y = 0;
-        j = 0;
-        t = 0;
+        power = 0;
+        life = 100;
+        killCount = 0;
     }
-    public void act()
-    {
+
+    public void act() {
         keyPressWalk();
+        keyPressPush();
         keyPressKick();
         keyPressSpecialMove();
-        keyPressDefense();
+        checkEnemy();
+        handleDefence();
         move(speed);
+        getWorld().showText("HP: " + Integer.toString( getLife() ), 760, ( getWorld().getHeight() / 2 ) - 25);
+        getWorld().showText("Kills: " + getKill(), 760, getWorld().getHeight() / 2);
     }
     
-    public void keyPressWalk()
-    {
-        if (Greenfoot.isKeyDown("right") && i == 0 && j  == 0 && t  == 0)
-    { 
-        isRight = true;
-        isLeft = false;
-        walkTimer ++;
-        move(5);
-            
-            switch(walkTimer) {
+    public void takeDamage( int damage ) {
+        if ( (life - damage) <= 0) {
+            this.life = 0;
+            getWorld().showText("HP: " + Integer.toString( getLife() ), 760, ( getWorld().getHeight() / 2 ) - 25);
+            Greenfoot.stop();
+            Greenfoot.playSound("youLose.mp3");
+            getWorld().addObject( new GameOver("youLose.png") , getWorld().getWidth()/2, getWorld().getHeight()/2);
+        } else  if ( !this.isDefending ){
+            this.life -= damage;
+        }
+    }
+
+    public void keyPressPush() {
+        String auxiliar = isLeft ? "punchLeft" : "punchRight";
+        String auxiliar2 = isLeft ? "Left2" : "Right2";
+
+        if ( !isPunching && Greenfoot.isKeyDown("s") && !this.spaceDown ) {
+            setImage("stand" + auxiliar2 + ".png");
+            punchTimer++;
+        }
+        
+        if ( Greenfoot.isKeyDown("s") && punchTimer == 2 && !this.spaceDown  ) {
+            setImage(auxiliar + ".png");
+            isPunching = true;
+        }
+        
+        if ( isPunching && !Greenfoot.isKeyDown("s")  ) {
+            setImage("stand" + auxiliar2 + ".png");
+            isPunching = false;
+            punchTimer -= 2;
+        }
+
+    }
+
+    public void keyPressWalk() {
+        String auxiliar = this.isLeft ? "Left" : "Right";
+
+        if ( ( Greenfoot.isKeyDown("right") || Greenfoot.isKeyDown("left") ) && !this.spaceDown ) {
+            this.isRight = !this.isLeft;
+            this.isLeft =  Greenfoot.isKeyDown("left") ? true : false;
+
+            walkTimer++;
+            move(this.isRight ? 5 : -5);
+ 
+            switch (walkTimer) {
                 case 0:
-                    setImage("standRight1.png");
+                    setImage("stand" + auxiliar + "1.png");
                     break;
                 case 6:
-                    setImage("standRight1.png");
+                    setImage("stand" + auxiliar + "1.png");
                     break;
                 case 11:
-                    setImage("standRight2.png");
+                    setImage("stand" + auxiliar + "2.png");
                     break;
                 case 16:
-                    setImage("standRight2.png");
+                    setImage("stand" + auxiliar + "2.png");
                     break;
                 case 21:
-                    setImage("standRight2.png");
+                    setImage("stand" + auxiliar + "2.png");
                     walkTimer = 0;
                     break;
             }
-    }
-    else
-        {
-            if (Greenfoot.isKeyDown("left") && i == 0 && j == 0 && t == 0)
-        { 
-            isLeft = true;
-            isRight = false;
-            move(-5);
-            walkTimer ++;
-
-            if(walkTimer == 0)
-                setImage("standLeft1.png");
-            if(walkTimer == 6)
-                setImage("standLeft1.png");
-            if(walkTimer == 11)
-                setImage("standLeft2.png");
-            if(walkTimer == 16)
-                setImage("standLeft2.png");
-            if(walkTimer == 21)
-            {
-                setImage("standLeft2.png");
-                walkTimer = 0;
-            }
         }
+    }
+
+    public void keyPressKick() {
+        if ( ( Greenfoot.isKeyDown("a") && !Greenfoot.isKeyDown("s") ) && !this.spaceDown ) {
+            String auxiliar = this.isLeft ? "Left" : "Right";
+    
+            walkTimer++;
+            switch( walkTimer ) {
+                case 0:
+                    setImage("kick" + auxiliar + "1.png");
+                    break;
+                case 6:
+                    setImage("kick" + auxiliar + "1.png");
+                    break;
+                case 11:
+                    setImage("kick" + auxiliar + "2.png");
+                    break;
+                case 16:
+                    setImage("kick" + auxiliar + "2.png");
+                    break;
+                case 21:
+                    setImage("stand" + auxiliar + "2.png");
+                    walkTimer = 0;
+                    break;
+            }            
+        }
+    }
+
+    public void keyPressSpecialMove() {
+        String prefixImage = this.isLeft ? "Left" : "Right";
+        int speed = this.isLeft ? -10 : 10;
+
+        if ( Greenfoot.isKeyDown("space") && !isAtEdge() && getAvaiableSpecialMove() && !Greenfoot.isKeyDown("s") ) {
+            this.speed = speed;
+            this.spaceDown = true;
+            setImage("specialMove" + prefixImage + ".png");
+            Greenfoot.playSound("Whoosh.mp3");
         }
         
-        // if (Greenfoot.isKeyDown("up"))
-        // {    
-        // setLocation(getX(), getY()-speed); //up
-        // walkTimer ++;
-
-            // if(walkTimer == 0)
-                // setImage("parado 1.png");
-            // if(walkTimer == 6)
-                // setImage("parado 1.png");
-            // if(walkTimer == 11)
-                // setImage("parado 2.png");
-            // if(walkTimer == 16)
-                // setImage("parado 2.png");
-            // if(walkTimer == 21)
-            // {
-                // setImage("parado 2.png");
-                // walkTimer = 0;
-            // }
-        // }
-        // if (Greenfoot.isKeyDown("down"))
-        // {
-        // setLocation(getX(), getY()+speed); //down
-        // walkTimer ++;
-
-            // if(walkTimer == 0)
-                // setImage("parado 1.png");
-            // if(walkTimer == 6)
-                // setImage("parado 1.png");
-            // if(walkTimer == 11)
-                // setImage("parado 2.png");
-            // if(walkTimer == 16)
-                // setImage("parado 2.png");
-            // if(walkTimer == 21)
-            // {
-                // setImage("parado 2.png");
-                // walkTimer = 0;
-            // }
-        // }
-    
+        if ( !Greenfoot.isKeyDown("space") && isAtEdge() ) {
+                this.speed = 0;
+                this.spaceDown = false;
+                setAvaiableSpecialMove(false);
+                setImage("stand" + prefixImage + "1.png");
+        }
     }
     
-    public void keyPressKick()
-    {
-        if (Greenfoot.isKeyDown("a") && !Greenfoot.isKeyDown("s") && isRight == true)
-        { 
-            j = 1;
-            walkTimer ++;
-            if(walkTimer == 0)
-                setImage("kickRight1.png");
-            if(walkTimer == 6)
-                setImage("kickRight1.png");
-            if(walkTimer == 11)
-                setImage("kickRight2.png");
-            if(walkTimer == 16)
-                setImage("kickRight2.png");
-            if(walkTimer == 21)
-            {
-                setImage("standRight2.png");
-                walkTimer = 0;
-            }
-        }else{
-            j = 0;
-        }
-        
-         if (Greenfoot.isKeyDown("a") && !Greenfoot.isKeyDown("s") && isLeft == true)
-        { 
-            j = 1;
-            walkTimer ++;
-            if(walkTimer == 0)
-                setImage("kickLeft1.png");
-            if(walkTimer == 6)
-                setImage("kickLeft1.png");
-            if(walkTimer == 11)
-                setImage("kickLeft2.png");
-            if(walkTimer == 16)
-                setImage("kickLeft2.png");
-            if(walkTimer == 21)
-            {
-                setImage("standLeft2.png");
-                walkTimer = 0;
-            }
-        }else{
-            j = 0;
-        }
-        
-        if (Greenfoot.isKeyDown("s") && isRight == true)
-        {
-            j = 1;
-            walkTimer ++;
-            if(walkTimer == 0)
-                setImage("standRight1.png");
-            if(walkTimer == 6)
-                setImage("standRight1.png");
-            if(walkTimer == 11)
-                setImage("punchRight.png");
-            if(walkTimer == 16)
-                setImage("punchRight.png");
-            if(walkTimer == 21)
-            {
-                setImage("standRight2.png");
-                walkTimer = 0;
-            }
-        }
-         if (Greenfoot.isKeyDown("s") && isLeft == true)
-        {
-            j = 1;
-            walkTimer ++;
-            if(walkTimer == 0)
-                setImage("standLeft1.png");
-            if(walkTimer == 6)
-                setImage("standLeft1.png");
-            if(walkTimer == 11)
-                setImage("punchLeft.png");
-            if(walkTimer == 16)
-                setImage("punchLeft.png");
-            if(walkTimer == 21)
-            {
-                setImage("standLeft2.png");
-                walkTimer = 0;
-            }
-        }
-    
+    public void setAvaiableSpecialMove(boolean avaiableSpecialMove) {
+        this.avaiableSpecialMove = avaiableSpecialMove;
     }
-    public void keyPressSpecialMove()
-    {
-        if (Greenfoot.isKeyDown("space") && isRight == true && !isAtEdge())
-            {   
-                i = 1;
-                y = 1;
-                speed = 10;
-                setImage("specialMoveRight.png");
+
+    public void setLife(int step) {
+        if ( this.life + step < 100 ) {
+            this.life += step;
+        } else {
+            this.life = 100;
+        }
+
+    }
+
+    public void setMove(int speed) {
+        move(speed);
+    }
+    
+    public void checkEnemy(){        
+        for (Enemy enemy : getIntersectingObjects( Enemy.class ) )
+        {
+            boolean faceToFace = enemy.getIsLeft() == this.isLeft;
+            if ( enemy != null ) {
+                if ( sDown != Greenfoot.isKeyDown("s") && faceToFace) {
+                    sDown = !sDown;
+                    if (sDown) enemy.takeDamage( 20 );
+                }
+                
+                if ( aDown != Greenfoot.isKeyDown("a") && faceToFace) {
+                    aDown = !aDown;
+                    if (aDown) enemy.takeDamage( 22 );
+                    
+                }
+
+                if ( this.spaceDown && this.getAvaiableSpecialMove() && faceToFace ) {
+                    enemy.takeDamage( 12 );
+                }
+                
             }
-        else{
-            if (!Greenfoot.isKeyDown("space") && isAtEdge())
-            {
-               speed = 0;
-               setImage("standLeft1.png");
-               i = 0;
-               y = 0;
+        }
+    }
+    
+    public void handleDefence() {
+        String auxiliar = this.isLeft ? "Left" : "Right" ;
+    
+        if ( keyForDefence != Greenfoot.isKeyDown("d") && !this.spaceDown) {
+            keyForDefence = !keyForDefence;
+            if (keyForDefence) {
+                setImage("defence" + auxiliar + ".png");
+                isDefending = true;
             }
-            }
-        if (Greenfoot.isKeyDown("space") && isLeft == true && !isAtEdge())
-            {
-                i = 1;
-                y = 1;
-                speed = -10;
-                setImage("specialMoveLeft.png");
-            }
-        else{
-            if (!Greenfoot.isKeyDown("space") && isAtEdge())
-            {
-               speed = 0;
-               setImage("standRight1.png");
-               i = 0;
-               y = 0;
-            }
-            }    
+        }
             
-        }
-        
-    public void keyPressDefense()
-    {
-        if (Greenfoot.isKeyDown("down") && isRight == true && y == 0)
-        {
-            t = 1;
-            setImage("defenceRight.png");
-        }
-        else
-        {
-            t = 0;
-        }
-        
-        if (Greenfoot.isKeyDown("down") && isLeft == true && y == 0)
-        {
-            setImage("defenceLeft.png");
-            t = 1;
-        }
-        else
-        {
-            t = 0;
-        }
+        if ( isDefending && !this.spaceDown ) {
+            defenceTimer--;
+            if ( defenceTimer <= 0 ) {
+                setImage("stand" + auxiliar + "1.png");
+                isDefending = false;
+                defenceTimer = 100;
+            }
+        }   
     }
-}
+        
+    public void setKill(){
+        this.killCount++;
+    }
     
+    public int getKill(){
+        return this.killCount;
+    }
+    
+    public boolean getIsLeft() {
+        return this.isLeft;
+    }
+
+    public boolean getIsRight() {
+        return this.isRight;
+    }
+    
+    public int getLife() {
+        return this.life;
+    }
+
+    public boolean getAvaiableSpecialMove() {
+        return this.avaiableSpecialMove;
+    }
+    
+    public boolean getSpaceDown() {
+        return this.spaceDown;
+    }
+
+}

@@ -1,0 +1,7 @@
+#BlueJ class context
+comment0.target=Boss
+comment1.params=life
+comment1.target=Boss(int)
+comment2.params=
+comment2.target=void\ act()
+numComments=3

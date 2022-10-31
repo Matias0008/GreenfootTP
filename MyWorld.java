@@ -1,49 +1,77 @@
-import greenfoot.*;  // (World, Actor, GreenfootImage, Greenfoot and MouseInfo)
+import greenfoot.*;
 
-/**
- * Write a description of class MyWorld here.
- * 
- * @author (your name) 
- * @version (a version number or a date)
- */
-public class MyWorld extends World
-{
-
-    /**
-     * Constructor for objects of class MyWorld.
-     * 
-     */
+public class MyWorld extends World {
+    Man man;
+    boolean existBoss;
     int i = 0;
-    public MyWorld()
-    {    
-        super(800, 600, 1); 
-        // Create a new world with 600x400 cells with a cell size of 1x1 pixels.
-        GreenfootImage bg = new GreenfootImage("dojo background.jpg"); // adjust filename as needed
-        bg.scale(getWidth(), getHeight());
+    int y = 0;
+    int e = 0;
+
+    public MyWorld() {
+        super(800, 600, 1);
+        GreenfootImage bg = new GreenfootImage("dojo background.jpg");
+        bg.scale( getWidth(), getHeight() );
+        man = new Man();
         setBackground(bg);
-       populateWorld();
-       generateFragments();
-        
+        prepare();
     }
-    
+
     public void act() {
         i++;
-        generateFragments();
-    }
-    
-    public void populateWorld()
-    {
-         Man man = new Man();
-         addObject(man,200,500);
-    }
-    
-    public void generateFragments() {
-        if (i == 300) {
-            for(int i = 0; i < 2; i++) {
-             addObject(new Fragment(),Greenfoot.getRandomNumber(800),1);
+        y++;
+        e++;
+        spawnHealth();
+        spawnPower();
+        if ( man.getKill() == 10  && getObjects( Simple.class ).size() == 0 )  {
+            GreenfootImage bossBg = new GreenfootImage("bossBg.jpg");
+            bossBg.scale(getWidth(), getHeight());
+            setBackground(bossBg);
+            spawnBoss();
+        } else if ( man.getKill() < 10 ) {
+            spawnEnemies();
         }
-        i = 0;
+    }
+    
+    public void prepare() {
+        addObject(man, 200, 500);
+
+    }
+
+    public void spawnHealth() {
+        if (i == 200) {
+            addObject( new Health(), Greenfoot.getRandomNumber(800), 1 );
+            i = 0;
         }
     }
 
+    public void spawnPower() {
+        if (y == 900) {
+            addObject( new Power(), Greenfoot.getRandomNumber(500), 1 );
+            y = 0;
+        }
+    }
+
+    public void spawnEnemies() {
+        if (e == 300) {
+                addObject( new Simple() , 800, 500 );
+                e++;
+                if (e == 301) {
+                    addObject( new Simple(), -800, 500) ;
+                }
+                e = 0;
+        }
+    }
+    
+    public void spawnBoss() {
+        if (!existBoss) 
+        {
+            addObject( new Boss(900) , 900, 500 );
+            existBoss = true;
+            Greenfoot.playSound("Gong.mp3");
+            Greenfoot.playSound("evilLaugh.mp3");
+        };
+    }
+    
+
+    
 }
